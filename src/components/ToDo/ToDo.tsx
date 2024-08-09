@@ -3,7 +3,11 @@ import './toDo.module.scss';
 import React, { ChangeEventHandler, ChangeEvent, KeyboardEventHandler, useState } from 'react';
 import AddItemFor from '../AddItem/AddItem';
 import EditableSpan from '../EditableSpan/EditableSpan';
-
+import DeleteIcon from '@mui/icons-material/Delete';
+import Grid from '@mui/material/Grid';
+import Checkbox from '@mui/material/Checkbox';
+import Tab from '@mui/material/Tab';
+import Button from '@mui/material/Button';
 
 export type TasksType = {
   id: string,
@@ -32,8 +36,8 @@ export type PropsType = {
 function ToDo(props: PropsType) {
   const { title, tasks, removeTask, changeFilter, addTask, changeStatus, filter, id, removeTodo, changeTaskTitle } = props;
 
-  
-  
+
+
 
   const onAllClick = () => {
     changeFilter('All', id);
@@ -50,16 +54,19 @@ function ToDo(props: PropsType) {
     removeTodo(id);
   }
   const addItem = (text: string) => {
-      addTask(text, id);
+    addTask(text, id);
   }
   const changeTodolistTitle = (newTitle: string) => {
-      props.changeTodolistTitle(id, newTitle)
+    props.changeTodolistTitle(id, newTitle)
   }
   return (
-    <div>
-      <h3><EditableSpan title={title} onChange={changeTodolistTitle}/><button onClick={() => removeTodoList(id)}>x</button></h3>
-      <AddItemFor 
-      addItem={addItem}
+    <div className=''>
+      <h3 className='d-flex align-center'>
+        <EditableSpan title={title} onChange={changeTodolistTitle} /><DeleteIcon onClick={() => removeTodoList(id)} />
+      </h3>
+      <AddItemFor
+        addItem={addItem}
+        labelText={'Add Task'}
       />
       <ul>
 
@@ -75,15 +82,25 @@ function ToDo(props: PropsType) {
             const onChangeTitle = (newValue: string) => {
               changeTaskTitle(item.id, newValue, id);
             }
-            return <li key={item.id} className={item.isDone ? 'isDone' : '' }><input type={"checkbox"} checked={item.isDone} onChange={onChangeChecked} /><EditableSpan title={item.title} onChange={onChangeTitle}/><button onClick={() => onClickRemove(item)}>x</button></li>
+            return <li key={item.id}
+              className={item.isDone ? 'isDone' : ''}>
+
+              <Checkbox checked={item.isDone} onChange={onChangeChecked} defaultChecked />
+              <EditableSpan title={item.title} onChange={onChangeTitle} />
+              
+              <Button variant="outlined" color="error" onClick={() => onClickRemove(item)}>
+                x
+              </Button>
+            </li>
           })
         }
 
       </ul>
       <div>
-        <button className={filter === 'All' ? 'active-filter' : '' } onClick={onAllClick}>All</button>
-        <button className={filter === 'Active' ? 'active-filter' : '' } onClick={onActiveClick}>Active</button>
-        <button className={filter === 'Completed' ? 'active-filter' : '' } onClick={onCompletedClick}>Completed</button>
+
+        <Tab label={'All'} className={filter === 'All' ? 'active-filter' : ''} onClick={onAllClick} />
+        <Tab label={'Active'} className={filter === 'Active' ? 'active-filter' : ''} onClick={onActiveClick} />
+        <Tab label={'Completed'} className={filter === 'Completed' ? 'active-filter' : ''} onClick={onCompletedClick} />
       </div>
     </div>
   );

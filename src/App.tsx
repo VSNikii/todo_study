@@ -1,5 +1,4 @@
 import React, { useState, ChangeEvent, KeyboardEventHandler } from 'react';
-import logo from './logo.svg';
 import './App.css';
 import 'macro-css';
 import ToDo from './components/ToDo/ToDo';
@@ -97,11 +96,11 @@ function App() {
 
   const changeTodolistTitle = (todoId: string, newTitle: string) => {
     const todoList = todoLists.find(todo => todo.id === todoId);
-    if(todoList){
+    if (todoList) {
       todoList.title = newTitle;
       setTodoLists([...todoLists])
     }
-  } 
+  }
 
   function addTodolist(text: string) {
     let todoList: TodoList = {
@@ -117,42 +116,46 @@ function App() {
   }
 
   return (
-    <div className="App clear">
+    <div className="App clear d-flex flex-column align-center">
       <AddItemFor
-        addItem={addTodolist} />
+        addItem={addTodolist}
+        labelText='Add Todolist' />
       <h1>TodoList</h1>
+      <div className='d-flex justify-around ml-50 mr-50 align-center' style={{width: 1000}}>
+        {
+          todoLists.map((todo) => {
+            let tasksForTodoList = tasksObj[todo.id];
 
-      {
-        todoLists.map((todo) => {
-          let tasksForTodoList = tasksObj[todo.id];
+            if (todo.filter === 'Completed') {
+              tasksForTodoList = tasksForTodoList.filter(task => task.isDone === true);
+            }
 
-          if (todo.filter === 'Completed') {
-            tasksForTodoList = tasksForTodoList.filter(task => task.isDone === true);
-          }
+            if (todo.filter === 'Active') {
+              tasksForTodoList = tasksForTodoList.filter(task => task.isDone === false);
+            }
 
-          if (todo.filter === 'Active') {
-            tasksForTodoList = tasksForTodoList.filter(task => task.isDone === false);
-          }
+            return (
 
-          return (
-            <ToDo
-              key={todo.id}
-              title={todo.title}
-              tasks={tasksForTodoList}
-              removeTask={removeTask}
-              changeFilter={changeFilter}
-              addTask={addTask}
-              changeStatus={changeStatus}
-              filter={todo.filter}
-              id={todo.id}
-              removeTodo={removeTodo}
-              changeTaskTitle={changeTaskTitle}
-              changeTodolistTitle={changeTodolistTitle}
-            />
-          );
-        })
-      }
+              <ToDo
+                key={todo.id}
+                title={todo.title}
+                tasks={tasksForTodoList}
+                removeTask={removeTask}
+                changeFilter={changeFilter}
+                addTask={addTask}
+                changeStatus={changeStatus}
+                filter={todo.filter}
+                id={todo.id}
+                removeTodo={removeTodo}
+                changeTaskTitle={changeTaskTitle}
+                changeTodolistTitle={changeTodolistTitle}
 
+              />
+
+            );
+          })
+        }
+      </div>
     </div>
   );
 
