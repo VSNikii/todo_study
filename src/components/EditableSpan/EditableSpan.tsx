@@ -1,4 +1,5 @@
-import React, { useState, ChangeEventHandler } from "react";
+import { TextField } from "@mui/material";
+import React, { useState, ChangeEventHandler, useCallback } from "react";
 
 
 
@@ -8,7 +9,7 @@ type EditableSpanPropsType = {
   onChange: (newValue: string) => void
 }
 
-function EditableSpan(props: EditableSpanPropsType) {
+const EditableSpan = React.memo((props: EditableSpanPropsType) => {
   let { title } = props;
 
   let [editMode, setEditMode] = useState(false);
@@ -17,21 +18,23 @@ function EditableSpan(props: EditableSpanPropsType) {
   const activateDoubleClick = () => {
     setEditMode(true);
   }
-  const activateVueMode = () => {
+
+  const activateViewMode = () => {
     setEditMode(false);
     props.onChange(valueTask)
   }
-  const onChangeEditMode = (e: ChangeEventHandler<HTMLInputElement>) => {
+
+  const onChangeEditMode =(e: ChangeEventHandler<HTMLInputElement>) => {
     setValueTask(e.target.value);
     title = valueTask;
   }
 
   return editMode
-    ? <input onChange={onChangeEditMode} value={valueTask} onBlur={activateVueMode} autoFocus/>
+    ? <TextField id="filled-basic" label="Title" variant="filled" onChange={onChangeEditMode} value={valueTask} onBlur={activateViewMode} autoFocus/>
     : <span onDoubleClick={activateDoubleClick}>{title}</span>
 
 
 
-}
+});
 
 export default EditableSpan;

@@ -1,13 +1,16 @@
-import { FilterValueType } from '../../App';
 import './toDo.module.scss';
-import React, { ChangeEventHandler, ChangeEvent, KeyboardEventHandler, useState } from 'react';
-import AddItemFor from '../AddItem/AddItem';
+import React, { ChangeEventHandler, useCallback } from 'react';
+import { AddItemFor } from '../AddItem/AddItem';
 import EditableSpan from '../EditableSpan/EditableSpan';
 import DeleteIcon from '@mui/icons-material/Delete';
-import Grid from '@mui/material/Grid';
-import Checkbox from '@mui/material/Checkbox';
 import Tab from '@mui/material/Tab';
-import Button from '@mui/material/Button';
+import { useSelector } from 'react-redux';
+import { addTaskAC, changeMarkerTaskAC, changeTitleTaskAC, removeTaskAC } from '../../state/tasks-reducer';
+import { AppRootState } from '../../state/store';
+import { FilterValueType } from '../../AppWithRedux';
+import { useDispatch } from 'react-redux';
+import { Task } from '../Task/Task';
+
 
 export type TasksType = {
   id: string,
@@ -18,46 +21,73 @@ export type TasksType = {
 
 export type PropsType = {
   title: string,
-  tasks: Array<TasksType>,
-  removeTask: (id: string, todoId: string) => void,
   changeFilter: (value: FilterValueType, todoId: string) => void
-  addTask: (text: string, todoId: string) => void
-  changeStatus: (taskId: string, isDone: boolean, todoId: string) => void
   filter: FilterValueType
   id: string
   removeTodo: (todoId: string) => void
-  changeTaskTitle: (taskId: string, newTitle: string, todoId: string) => void
   changeTodolistTitle: (todoId: string, newTitle: string) => void
 
 };
 
 
 
-function ToDo(props: PropsType) {
-  const { title, tasks, removeTask, changeFilter, addTask, changeStatus, filter, id, removeTodo, changeTaskTitle } = props;
+const ToDo = React.memo((props: PropsType) => {
 
 
+  const { title, changeFilter, filter, id, removeTodo }: PropsType = props;
+
+  const tasks = useSelector<AppRootState, Array<TasksType>>((state) => state.tasks[id]);
+  const dispatch = useDispatch();
+
+  const addTask = useCallback((text: string) => {
+    dispatch(addTaskAC(text, id))
+  }, [dispatch]);
+
+  const onChangeChecked = useCallback((e: ChangeEventHandler<HTMLInputElement>, todoId: string, taskId: string) => {
+    let newIsDoneValue: boolean = e.target.checked;
+    dispatch(changeMarkerTaskAC(todoId, taskId, newIsDoneValue))
+  }, [dispatch]);
+
+  const removeTask = useCallback((todoId: string, taskId: string) => {
+    dispatch(removeTaskAC(taskId, todoId))
+  }, [dispatch]);
+
+  const changeTaskTitle = useCallback((newTitle: string, todoId: string, taskId: string) => {
+    dispatch(changeTitleTaskAC(newTitle, todoId, taskId));
+  }, [dispatch]);
 
 
-  const onAllClick = () => {
-    changeFilter('All', id);
-  }
-  const onActiveClick = () => {
-    changeFilter('Active', id);
-  }
-  const onCompletedClick = () => {
-    changeFilter('Completed', id);
-  }
-
-
-  const removeTodoList = (id: string) => {
+  const removeTodoList = useCallback((id: string) => {
     removeTodo(id);
-  }
-  const addItem = (text: string) => {
-    addTask(text, id);
-  }
-  const changeTodolistTitle = (newTitle: string) => {
+  }, [removeTodo, id])
+
+  const changeTodolistTitle = useCallback((newTitle: string) => {
     props.changeTodolistTitle(id, newTitle)
+  }, [props.changeTodolistTitle, id]);
+
+  const onAllClick = useCallback(() => {
+    changeFilter('All', id);
+  }, [changeFilter, id])
+
+  const onActiveClick = useCallback(() => {
+    changeFilter('Active', id);
+  }, [changeFilter, id])
+
+  const onCompletedClick = useCallback(() => {
+    changeFilter('Completed', id);
+  }, [changeFilter, id])
+
+
+
+
+  let tasksForTodoList = tasks;
+
+  if (filter === 'Completed') {
+    tasksForTodoList = tasks.filter(task => task.isDone === true);
+  }
+
+  if (filter === 'Active') {
+    tasksForTodoList = tasks.filter(task => task.isDone === false);
   }
   return (
     <div className=''>
@@ -65,46 +95,40 @@ function ToDo(props: PropsType) {
         <EditableSpan title={title} onChange={changeTodolistTitle} /><DeleteIcon onClick={() => removeTodoList(id)} />
       </h3>
       <AddItemFor
-        addItem={addItem}
+        addItem={addTask}
         labelText={'Add Task'}
       />
       <ul>
 
         {
-          tasks.map((item) => {
-            const onClickRemove = (item: TasksType) => {
-              removeTask(item.id, id);
-            }
-            const onChangeChecked = (e: ChangeEventHandler<HTMLInputElement>) => {
-              changeStatus(item.id, e.target.checked, id);
-              console.log(e.target.checked);
-            }
-            const onChangeTitle = (newValue: string) => {
-              changeTaskTitle(item.id, newValue, id);
-            }
-            return <li key={item.id}
-              className={item.isDone ? 'isDone' : ''}>
 
-              <Checkbox checked={item.isDone} onChange={onChangeChecked} defaultChecked />
-              <EditableSpan title={item.title} onChange={onChangeTitle} />
-              
-              <Button variant="outlined" color="error" onClick={() => onClickRemove(item)}>
-                x
-              </Button>
-            </li>
-          })
+          tasksForTodoList.map((item: any) => <Task
+            key={id}
+            todoId={id}
+            taskId={item.id}
+            isDone={item.isDone}
+            title={item.title}
+            onChangeChecked={onChangeChecked}
+            removeTask={removeTask}
+            changeTaskTitle={changeTaskTitle}
+
+             />)
+
         }
+
+
 
       </ul>
       <div>
 
-        <Tab label={'All'} className={filter === 'All' ? 'active-filter' : ''} onClick={onAllClick} />
+        <Tab label={'All'} className={filter === 'All' ? 'all-filter' : ''} onClick={onAllClick} />
         <Tab label={'Active'} className={filter === 'Active' ? 'active-filter' : ''} onClick={onActiveClick} />
-        <Tab label={'Completed'} className={filter === 'Completed' ? 'active-filter' : ''} onClick={onCompletedClick} />
+        <Tab label={'Completed'} className={filter === 'Completed' ? 'completed-filter' : ''} onClick={onCompletedClick} />
       </div>
     </div>
   );
-}
+});
 
 export default ToDo;
+
 
